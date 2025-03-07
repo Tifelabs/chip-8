@@ -5,13 +5,14 @@
 #define HEIGHT 32
 
 //Chip-8 specs: 4KB Memory, 16 8-bit registers
-uint8_t graphics[WIDTH * HEIGHT]; // 2048 bytes, one per pixel      
+uint8_t screen[WIDTH * HEIGHT]; // 2048 bytes, one per pixel      
 uint8_t memory[4096];       // 4KB RAM
 uint8_t V[16];              // General purpose registers (V0-VF)
 uint16_t PC = 0x200;        // Program Counter (Starts at 0x200 for the chip-8)
 uint16_t I;                 // Index register
 uint8_t delay_timer;        //Timers
 uint8_t sound_timer;  
+
 
 //Font-Set
 uint8_t fontset[80] = {
@@ -62,13 +63,11 @@ void execute_opcode(uint16_t opcode){
 
 int main() {
     load_fontset();
-    
-    // Fake a simple program in memory (CLS: 00E0 = clear screen)
     memory[0x200] = 0x00;
     memory[0x201] = 0xE0;
 
     uint16_t opcode = fetch_opcode();
-
+    execute_opcode(opcode);
     printf("PC now at: 0x%X\n", PC);
     return 0;
 }
