@@ -1,20 +1,17 @@
 #include <stdio.h>
-#include <stdint.h>   
+#include <stdint.h>
 
 #define WIDTH 64
 #define HEIGHT 32
 
-//Chip-8 specs: 4KB Memory, 16 8-bit registers
-uint8_t screen[WIDTH * HEIGHT]; // 2048 bytes, one per pixel      
-uint8_t memory[4096];       // 4KB RAM
-uint8_t V[16];              // General purpose registers (V0-VF)
-uint16_t PC = 0x200;        // Program Counter (Starts at 0x200 for the chip-8)
-uint16_t I;                 // Index register
-uint8_t delay_timer;        //Timers
-uint8_t sound_timer;  
+uint8_t screen[WIDTH * HEIGHT]; // 2048 bytes, one per pixel
+uint8_t memory[4096];           // 4KB RAM
+uint8_t V[16];                  // General purpose registers (V0-VF)
+uint16_t PC = 0x200;            // Program Counter (starts at 0x200)
+uint16_t I;                     // Index register
+uint8_t delay_timer;            // Timers
+uint8_t sound_timer;
 
-
-//Font-Set
 uint8_t fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -34,40 +31,55 @@ uint8_t fontset[80] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-//Function to load font set
-void load_fontset(){
-    for(int i = 0; i < 80; i++){
+void load_fontset() {
+    for (int i = 0; i < 80; i++) {
         memory[i] = fontset[i];
     }
 }
 
-//Fetch Instruction
-uint16_t fetch_opcode(){
+void init_screen() {
+    for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        screen[i] = 0;
+    }
+}
+
+uint16_t fetch_opcode() {
     uint16_t opcode = memory[PC] << 8 | memory[PC + 1];
-    PC += 2; //Next Instruction
+    PC += 2; // Next instruction
     return opcode;
 }
 
-//Run Instruction
-void execute_opcode(uint16_t opcode){
-    if(opcode == 0x00E0){
-        for(int i = 0; i < WIDTH * HEIGHT; i++){
+void execute_opcode(uint16_t opcode) {
+    if (opcode == 0x00E0) {
+        for (int i = 0; i < WIDTH * HEIGHT; i++) {
             screen[i] = 0; // Clear all pixels
         }
         printf("Screen Cleared!\n");
-    } else{
+    } else if (opcode == 0x00EE) {
+        printf("Returned!\n"); // Placeholder—stack not implemented yet
+    } else {
         printf("Unknown opcode: 0x%X\n", opcode);
     }
 }
 
-
 int main() {
     load_fontset();
+    init_screen();
+
+    // Test program: CLEA (00E0) then RET (00EE)
     memory[0x200] = 0x00;
     memory[0x201] = 0xE0;
+    memory[0x202] = 0x00;
+    memory[0x203] = 0xEE;
 
-    uint16_t opcode = fetch_opcode();
-    execute_opcode(opcode);
-    printf("PC now at: 0x%X\n", PC);
+    // Simple CPU loop (run 2 instructions)
+    for (int i = 0; i < 2; i++) {
+        uint16_t opcode = fetch_opcode();
+        printf("Fetched opcode: 0x%X at PC: 0x%X\n", opcode, PC - 2);
+        execute_opcode(opcode);
+    }
+
+    printf("Final PC: 0x%X\n", PC);
+    printf("Top-left pixel: %d\n", screen[0]);
     return 0;
 }
